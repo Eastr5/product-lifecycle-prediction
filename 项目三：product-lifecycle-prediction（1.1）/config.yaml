@@ -1,0 +1,25 @@
+data:
+  # Ändern Sie dies bei Bedarf auf den tatsächlichen Pfad oder kombinieren Sie Logik in load.py
+  raw_path: data/raw/online_retail_10_11.csv
+  processed_path: data/processed
+  min_days_threshold: 30 # Mindestanzahl von Tagen an Daten, um ein Produkt als gültig zu betrachten
+
+features:
+  windows: [7, 14, 30]     # Fenstergrößen für gleitende Durchschnittsberechnungen
+  sequence_length: 30     # Länge der Eingabesequenzen für das Modell
+
+training:
+  model_type: 'hybrid'     # 'hybrid' oder 'lstm'
+  epochs: 30
+  batch_size: 32
+  learning_rate: 0.001
+  test_size: 0.2          # Anteil der Daten, die für Tests verwendet werden
+  random_state: 42        # Für reproduzierbare Train/Test-Splits
+  patience: 10            # Epochen für Early Stopping ohne Verbesserung
+
+evaluation:
+  n_visualization_samples: 5 # Anzahl der Produkte, die für die Lebenszyklus-Visualisierung zufällig ausgewählt werden
+  output_dir: results       # Verzeichnis zum Speichern von Plots und Excel-Dateien
+
+excel:
+  output_filename: 'product_lifecycle_results.xlsx' # Name der Excel-Ausgabedatei
