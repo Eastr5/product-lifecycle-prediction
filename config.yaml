@@ -1,0 +1,182 @@
+# product_lifecycle_predictor_vA/config.yaml
+
+# --- 1. 项目基本设置 ---
+project_name: "Product Trend Prediction (Continuous Metrics)"
+version: "1.19.0-product_segmentation" 
+force_rerun_phase1: false 
+force_rerun_phase2: true 
+force_rerun_training: true 
+
+# --- 2. 数据路径与选择 ---
+data:
+  m5_base_path: "./data/raw" 
+  calendar_path: "calendar.csv"        
+  sales_train_path: "sales_train_validation.csv" 
+  sell_prices_path: "sell_prices.csv"
+  target_store_id: ["CA_1", "CA_2", "CA_3", "CA_4"] 
+  target_dept_id: "FOODS_3" 
+  processed_weekly_data_path: "data/processed/m5_weekly_processed_mha_detailed_event.parquet" 
+  features_path: "data/features/m5_weekly_features_regression_v19_segmentation.parquet" 
+  
+  regression_model_output_path: "models/pytorch_timeseries_regressor_v19_segmentation.pt" 
+  scaler_input_path: "models/pytorch_input_scaler_v19_segmentation.pkl"      
+  scaler_target_path: "models/pytorch_target_scaler_v19_segmentation.pkl"    
+  training_history_path: "results/regression_training_history_v19_segmentation.json" 
+  
+  rmsse_scales_path: "models/rmsse_scales_v19_segmentation.json" 
+  wrmsse_weights_path: "models/wrmsse_weights_v19_segmentation.json"
+
+  regression_evaluation_output_path: "results/pytorch_regression_evaluation_v19_segmentation.json" 
+  regression_predictions_output_path: "results/pytorch_regression_predictions_v19_segmentation.parquet" 
+
+# --- 3. 特征工程设置 ---
+feature_engineering:
+  base_sales_col: 'sales'          
+  aggregation_freq: 'W'            
+  group_id_col: 'id'      
+  prediction_horizon: 2 
+  smoothing_span_sales: 4 
+  clip_ratio_value: 10.0  
+
+  target_continuous_metrics: 
+    sales_W: { as_target: true } 
+    smoothed_sales_W: { as_target: false } 
+    price_W_mean: { as_target: false } 
+    sales_W_growth_4w_1p: { as_target: true } 
+    smoothed_sales_W_growth_4w_1p: { as_target: true } 
+    sales_W_volatility_4w: { as_target: false }
+    item_div_dept_sales_W: { as_target: false }
+    item_div_store_sales_W: { as_target: false }
+
+  weekly_lags_input: [1, 2, 3, 4]         
+  weekly_rolling_windows_input: [4, 8]    
+  weekly_rolling_stats_input: ['mean', 'std']    
+  filter_zero_sales_weeks: true
+
+  product_segmentation:
+    enable: true 
+    sales_level_window: 26  
+    volatility_level_window: 12 
+    sales_qcut_bins: [0, 0.33, 0.66, 1.0] 
+    sales_qcut_labels: ['LowSales', 'MidSales', 'HighSales'] 
+    vol_qcut_bins: [0, 0.5, 1.0]
+    vol_qcut_labels: ['Stable', 'Volatile'] 
+
+# --- 4. PyTorch 深度学习模型训练设置 ---
+training_dl_regression:
+  sequence_length: 12 
+  
+  feature_columns_numeric: [ 
+      'sales_W', 'smoothed_sales_W', 'price_W_mean', 'sales_W_growth_4w_1p', 
+      'smoothed_sales_W_growth_4w_1p', 'sales_W_volatility_4w',
+      'item_div_dept_sales_W', 'item_div_store_sales_W',
+      'sales_W_lag_1', 'sales_W_lag_2', 'sales_W_lag_3', 'sales_W_lag_4',
+      'smoothed_sales_W_lag_1', 'smoothed_sales_W_lag_2', 'smoothed_sales_W_lag_3', 'smoothed_sales_W_lag_4',
+      'price_W_mean_lag_1', 'price_W_mean_lag_2', 'price_W_mean_lag_3', 'price_W_mean_lag_4',
+      'sales_W_growth_4w_1p_lag_1', 'sales_W_growth_4w_1p_lag_2', 'sales_W_growth_4w_1p_lag_3', 'sales_W_growth_4w_1p_lag_4',
+      'smoothed_sales_W_growth_4w_1p_lag_1', 'smoothed_sales_W_growth_4w_1p_lag_2', 'smoothed_sales_W_growth_4w_1p_lag_3', 'smoothed_sales_W_growth_4w_1p_lag_4',
+      'sales_W_volatility_4w_lag_1', 'sales_W_volatility_4w_lag_2', 'sales_W_volatility_4w_lag_3', 'sales_W_volatility_4w_lag_4',
+      'item_div_dept_sales_W_lag_1', 'item_div_dept_sales_W_lag_2', 'item_div_dept_sales_W_lag_3', 'item_div_dept_sales_W_lag_4',
+      'item_div_store_sales_W_lag_1', 'item_div_store_sales_W_lag_2', 'item_div_store_sales_W_lag_3', 'item_div_store_sales_W_lag_4',
+      'sales_W_roll_mean_4w', 'sales_W_roll_mean_8w',
+      'smoothed_sales_W_roll_mean_4w', 'smoothed_sales_W_roll_mean_8w',
+      'price_W_mean_roll_mean_4w', 'price_W_mean_roll_mean_8w',
+      'sales_W_growth_4w_1p_roll_mean_4w', 'sales_W_growth_4w_1p_roll_mean_8w',
+      'smoothed_sales_W_growth_4w_1p_roll_mean_4w', 'smoothed_sales_W_growth_4w_1p_roll_mean_8w',
+      'sales_W_volatility_4w_roll_mean_4w', 'sales_W_volatility_4w_roll_mean_8w',
+      'item_div_dept_sales_W_roll_mean_4w', 'item_div_dept_sales_W_roll_mean_8w',
+      'item_div_store_sales_W_roll_mean_4w', 'item_div_store_sales_W_roll_mean_8w',
+      'sales_W_roll_std_4w', 'sales_W_roll_std_8w',
+      'smoothed_sales_W_roll_std_4w', 'smoothed_sales_W_roll_std_8w',
+      'price_W_mean_roll_std_4w', 'price_W_mean_roll_std_8w',
+      'sales_W_growth_4w_1p_roll_std_4w', 'sales_W_growth_4w_1p_roll_std_8w',
+      'smoothed_sales_W_growth_4w_1p_roll_std_4w', 'smoothed_sales_W_growth_4w_1p_roll_std_8w',
+      'sales_W_volatility_4w_roll_std_4w', 'sales_W_volatility_4w_roll_std_8w',
+      'item_div_dept_sales_W_roll_std_4w', 'item_div_dept_sales_W_roll_std_8w',
+      'item_div_store_sales_W_roll_std_4w', 'item_div_store_sales_W_roll_std_8w',
+      'weekofyear_sin', 'weekofyear_cos', 'month', 'year', 'time_idx',
+      'num_days_event_type1_sporting_in_week', 'num_days_event_type1_cultural_in_week',
+      'num_days_event_type1_national_in_week', 'num_days_event_type1_religious_in_week',
+      'num_days_event_type2_sporting_in_week', 'num_days_event_type2_cultural_in_week',
+      'num_days_event_type2_national_in_week', 'num_days_event_type2_religious_in_week',
+      'num_days_any_event_in_week',
+      'num_snap_ca_days_in_week', 'num_snap_tx_days_in_week', 'num_snap_wi_days_in_week',
+      'event_any_X_sales_roll_mean_4w', 'event_any_X_sales_volatility_4w',
+      'snap_ca_X_sales_roll_mean_4w', 'snap_ca_X_sales_volatility_4w'
+    ] 
+  feature_columns_categorical: [ 
+      'item_id', 
+      'store_id',
+      'product_segment' 
+    ]
+  embedding_dims: { 
+      item_id: 50, 
+      store_id: 10,
+      product_segment: 5 
+    }
+    
+  model_type: 'lstm_regressor' 
+  use_attention: true                 
+  attention_type: "multihead"         
+  num_attention_heads: 4              
+  attention_dropout: 0.1              
+  
+  hidden_units_lstm: [64, 32]         
+  num_lstm_layers: 2           
+  lstm_dropout: 0.2            
+  bidirectional_lstm: false    
+  dense_units_regressor: [64, 32]     
+  dense_dropout_regressor: 0.1 
+
+  device: 'cuda' 
+  epochs: 50 
+  batch_size: 128 
+  num_workers: 0 
+  optimizer: 'Adam'
+  learning_rate: 0.0005               
+  loss_function: 'MSELoss' 
+  
+  early_stopping_patience: 15         
+  save_best_model: true 
+
+  validation_split_date: '2015-06-28' 
+  test_split_date: '2016-01-03'     
+
+# --- 5. 预测结果解释设置 ---
+prediction_interpretation:
+  default_trend_label: "趋势未定"
+  rules_for_trends: 
+    growth_trend_lead1: 
+      condition: "predicted_smoothed_sales_W_growth_4w_1p_lead1 > 0.05 and predicted_sales_W_lead1 > 10" 
+      label: "增长趋势"
+    stable_low_trend_lead1:
+      condition: "abs(predicted_smoothed_sales_W_growth_4w_1p_lead1) < 0.03 and predicted_sales_W_lead1 < 5"
+      label: "稳定低活跃"
+    decline_trend_lead1:
+      condition: "predicted_smoothed_sales_W_growth_4w_1p_lead1 < -0.05"
+      label: "下降趋势"
+    growth_trend_lead2:
+      condition: "predicted_smoothed_sales_W_growth_4w_1p_lead2 > 0.05 and predicted_sales_W_lead2 > 12"
+      label: "增长趋势"
+    decline_trend_lead2:
+      condition: "predicted_smoothed_sales_W_growth_4w_1p_lead2 < -0.05" 
+      label: "下降趋势"
+
+# --- 6. 评估设置 ---
+evaluation_regression:
+  metrics: ['mean_squared_error', 'mean_absolute_error', 'r2_score', 'wmape', 'smape', 'rmsse', 'wrmsse'] 
+  rmsse_base_sales_col: 'sales_W' 
+  wrmsse_weight_column: 'sales_W' 
+  wrmsse_weight_period_weeks: 4   
+
+# --- 7. 报告生成设置 ---
+report_generation:
+  template_path: "dashboard.html"
+  output_path: "results/dashboard_report.html"
+  max_table_rows: 100
+
+# --- 8. 日志设置 ---
+logging:
+  level: "INFO" 
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_file: "results/experiment_regression_v19_segmentation.log" 

@@ -1,0 +1,342 @@
+2025-06-08 06:55:10,839 - root - INFO - 日志同时输出到文件: /home/featurize/work/product_lifecycle_predictor_vA/results/experiment_regression_vXX_your_version.log 和控制台。
+2025-06-08 06:55:10,839 - root - INFO - 项目 'Product Trend Prediction (Continuous Metrics)' 版本 '1.19.0-product_segmentation' 开始运行。
+2025-06-08 06:55:10,840 - root - INFO - ===== Phase 1: 数据加载和预处理 =====
+2025-06-08 06:55:10,840 - root - INFO - 开始加载和预处理M5数据（包含层级和细化事件特征）...
+2025-06-08 06:55:10,841 - root - INFO - 从缓存加载已处理的周度数据: data/processed/m5_weekly_processed_mha_detailed_event.parquet
+2025-06-08 06:55:11,058 - root - INFO - 从缓存加载数据成功。
+2025-06-08 06:55:11,058 - root - INFO - Phase 1: 数据加载和预处理成功，返回 587569 行数据。
+2025-06-08 06:55:11,058 - root - INFO - ===== Phase 2: 特征工程 =====
+2025-06-08 06:55:11,058 - root - INFO - 开始生成特征和目标变量 (包含产品分段特征)...
+2025-06-08 06:55:11,263 - root - INFO - 已准备/计算源指标 (用于衍生特征): sales_W
+2025-06-08 06:55:11,264 - root - INFO - 已准备/计算源指标 (用于衍生特征): price_W_mean
+2025-06-08 06:55:11,931 - root - INFO - 已准备/计算源指标 (用于衍生特征): smoothed_sales_W
+2025-06-08 06:55:12,788 - root - INFO - 已准备/计算源指标 (用于衍生特征): sales_W_volatility_4w
+2025-06-08 06:55:16,469 - root - INFO - 已准备/计算源指标 (用于衍生特征): sales_W_growth_4w_1p
+2025-06-08 06:55:20,058 - root - INFO - 已准备/计算源指标 (用于衍生特征): smoothed_sales_W_growth_4w_1p
+2025-06-08 06:55:20,070 - root - INFO - 已计算相对层级特征: item_div_dept_sales_W
+2025-06-08 06:55:20,082 - root - INFO - 已计算相对层级特征: item_div_store_sales_W
+2025-06-08 06:55:20,082 - root - INFO - 将为以下成功计算/获取并配置的源指标生成滞后和滚动特征: ['sales_W', 'price_W_mean', 'smoothed_sales_W', 'sales_W_volatility_4w', 'sales_W_growth_4w_1p', 'smoothed_sales_W_growth_4w_1p', 'item_div_dept_sales_W', 'item_div_store_sales_W']
+2025-06-08 06:55:38,842 - root - INFO - 开始创建产品分段特征...
+2025-06-08 06:55:40,271 - root - INFO - 销量分段完成。各段分布:
+sales_segment
+HighSales    199381
+LowSales     194466
+MidSales     193722
+Name: count, dtype: int64
+2025-06-08 06:55:40,294 - root - INFO - 波动性分段完成。各段分布:
+volatility_segment
+Stable      293786
+Volatile    293783
+Name: count, dtype: int64
+2025-06-08 06:55:40,570 - root - INFO - 产品分段特征 'product_segment' 创建完成。
+2025-06-08 06:55:41,001 - root - INFO - 时间相关特征创建完成。
+2025-06-08 06:55:41,001 - root - INFO - 开始创建事件交互特征...
+2025-06-08 06:55:41,004 - root - INFO - 已创建事件交互特征: event_any_X_sales_roll_mean_4w
+2025-06-08 06:55:41,007 - root - INFO - 已创建事件交互特征: event_any_X_sales_volatility_4w
+2025-06-08 06:55:41,010 - root - INFO - 已创建事件交互特征: snap_ca_X_sales_roll_mean_4w
+2025-06-08 06:55:41,012 - root - INFO - 已创建事件交互特征: snap_ca_X_sales_volatility_4w
+2025-06-08 06:55:41,234 - root - INFO - 目标变量列: ['sales_W_lead1', 'sales_W_lead2', 'sales_W_growth_4w_1p_lead1', 'sales_W_growth_4w_1p_lead2', 'smoothed_sales_W_growth_4w_1p_lead1', 'smoothed_sales_W_growth_4w_1p_lead2']
+2025-06-08 06:55:41,555 - root - INFO - 因目标列中的NaN（来自未来期数shift）移除了 6584 行。
+2025-06-08 06:55:42,499 - root - INFO - 特征工程完成。最终DataFrame形状: (580985, 104)
+2025-06-08 06:55:42,499 - root - INFO - 实际最终输入特征列 (96): ['sales_W', 'smoothed_sales_W', 'price_W_mean', 'sales_W_growth_4w_1p', 'smoothed_sales_W_growth_4w_1p', 'sales_W_volatility_4w', 'item_div_dept_sales_W', 'item_div_store_sales_W', 'sales_W_lag_1', 'sales_W_lag_2']...
+2025-06-08 06:55:42,499 - root - INFO - 实际最终目标列 (6): ['sales_W_lead1', 'sales_W_lead2', 'sales_W_growth_4w_1p_lead1', 'sales_W_growth_4w_1p_lead2', 'smoothed_sales_W_growth_4w_1p_lead1', 'smoothed_sales_W_growth_4w_1p_lead2']
+2025-06-08 06:55:45,045 - root - INFO - Phase 2: 特征数据已保存到: data/features/m5_weekly_features_regression_v19_segmentation.parquet
+2025-06-08 06:55:45,621 - root - INFO - 数据已划分为训练池 (539187行) 和最终测试集 (41798行) 基于日期 2016-01-03.
+2025-06-08 06:55:45,622 - root - INFO - ===== Phase 3: 模型训练 (回归) =====
+2025-06-08 06:55:45,622 - root - INFO - 开始回归模型训练流程...
+2025-06-08 06:55:45,740 - root - INFO - 使用设备: cuda
+2025-06-08 06:55:45,786 - root - INFO - 准备好的类别特征嵌入信息: {'item_id': {'vocab_size': 823, 'embedding_dim': 50}, 'store_id': {'vocab_size': 4, 'embedding_dim': 10}, 'product_segment': {'vocab_size': 6, 'embedding_dim': 5}}
+2025-06-08 06:55:46,159 - root - INFO - 训练集 (用于统计和训练) 大小: 466956, 验证集大小: 72231
+2025-06-08 06:55:48,479 - root - INFO - 为 3272 个序列计算了RMSSE缩放分母。
+2025-06-08 06:55:48,479 - root - INFO - 为 3272 个序列计算了WRMSSE权重。
+2025-06-08 06:55:48,626 - root - INFO - 拟合输入数值特征缩放器 (fit_transform)...
+2025-06-08 06:55:49,593 - root - INFO - 拟合目标列缩放器 (fit_transform)...
+2025-06-08 06:56:01,165 - root - INFO - 成功创建 431219 个时间序列样本。
+2025-06-08 06:56:01,177 - root - INFO - 使用预训练的输入数值特征缩放器 (transform)...
+2025-06-08 06:56:01,242 - root - INFO - 使用预训练的目标列缩放器 (transform)...
+2025-06-08 06:56:08,031 - root - INFO - 成功创建 38102 个时间序列样本。
+2025-06-08 06:56:08,032 - root - INFO - 训练集 DataLoader 创建完成。训练样本数: 431219
+2025-06-08 06:56:08,032 - root - INFO - 验证集 DataLoader 创建完成。验证样本数: 38102
+2025-06-08 06:56:08,032 - root - INFO - 构建 LSTMRegressor 模型: 数值特征数=93, 类别嵌入信息=True, 输出目标数=6, 使用注意力=True, 注意力类型='multihead', 注意力头数=4
+2025-06-08 06:56:08,054 - root - INFO - 为 'item_id' 创建嵌入层: vocab_size=823, embedding_dim=50
+2025-06-08 06:56:08,055 - root - INFO - 为 'store_id' 创建嵌入层: vocab_size=4, embedding_dim=10
+2025-06-08 06:56:08,055 - root - INFO - 为 'product_segment' 创建嵌入层: vocab_size=6, embedding_dim=5
+2025-06-08 06:56:08,056 - root - INFO - LSTM 输入维度: 158 (数值: 93, 嵌入: 65)
+2025-06-08 06:56:08,058 - root - INFO - 创建 LSTM 层: hidden_size=64, num_layers=2, bidirectional=False
+2025-06-08 06:56:08,060 - root - INFO - PyTorch MultiheadAttention 已启用: embed_dim=64, num_heads=4, dropout=0.1
+2025-06-08 06:56:08,060 - root - INFO - 回归头添加全连接层: output_units=64
+2025-06-08 06:56:08,061 - root - INFO - 回归头添加全连接层: output_units=32
+2025-06-08 06:56:08,061 - root - INFO - 回归头最终输出层: output_units=6
+2025-06-08 06:56:08,062 - root - INFO - LSTMRegressor 模型构建（可能带注意力机制）完成。
+2025-06-08 06:56:09,040 - root - INFO - 使用损失函数: MSELoss, 优化器: Adam (lr=0.0005)
+2025-06-08 06:56:09,040 - root - INFO - 开始训练模型，共 50 个 epochs...
+2025-06-08 06:56:46,361 - root - INFO - Epoch [1/50] | Train Loss: 0.567374 | Val Loss: 0.361596 | LR: 0.0005000
+2025-06-08 06:56:46,363 - root - INFO -   验证损失改善，保存最佳模型状态。Best Val Loss: 0.361596
+2025-06-08 06:57:22,516 - root - INFO - Epoch [2/50] | Train Loss: 0.461436 | Val Loss: 0.316716 | LR: 0.0005000
+2025-06-08 06:57:22,517 - root - INFO -   验证损失改善，保存最佳模型状态。Best Val Loss: 0.316716
+2025-06-08 06:57:59,456 - root - INFO - Epoch [3/50] | Train Loss: 0.425897 | Val Loss: 0.299884 | LR: 0.0005000
+2025-06-08 06:57:59,457 - root - INFO -   验证损失改善，保存最佳模型状态。Best Val Loss: 0.299884
+2025-06-08 06:58:37,733 - root - INFO - Epoch [4/50] | Train Loss: 0.400597 | Val Loss: 0.302052 | LR: 0.0005000
+2025-06-08 06:58:37,734 - root - INFO -   验证损失未改善 1轮。
+2025-06-08 06:59:15,151 - root - INFO - Epoch [5/50] | Train Loss: 0.391505 | Val Loss: 0.292901 | LR: 0.0005000
+2025-06-08 06:59:15,153 - root - INFO -   验证损失改善，保存最佳模型状态。Best Val Loss: 0.292901
+2025-06-08 06:59:52,794 - root - INFO - Epoch [6/50] | Train Loss: 0.376857 | Val Loss: 0.290078 | LR: 0.0005000
+2025-06-08 06:59:52,796 - root - INFO -   验证损失改善，保存最佳模型状态。Best Val Loss: 0.290078
+2025-06-08 07:00:27,013 - root - INFO - Epoch [7/50] | Train Loss: 0.368491 | Val Loss: 0.304799 | LR: 0.0005000
+2025-06-08 07:00:27,013 - root - INFO -   验证损失未改善 1轮。
+2025-06-08 07:01:02,434 - root - INFO - Epoch [8/50] | Train Loss: 0.363346 | Val Loss: 0.434272 | LR: 0.0005000
+2025-06-08 07:01:02,434 - root - INFO -   验证损失未改善 2轮。
+2025-06-08 07:01:40,226 - root - INFO - Epoch [9/50] | Train Loss: 0.355466 | Val Loss: 0.336839 | LR: 0.0005000
+2025-06-08 07:01:40,226 - root - INFO -   验证损失未改善 3轮。
+2025-06-08 07:02:18,226 - root - INFO - Epoch [10/50] | Train Loss: 0.343309 | Val Loss: 0.330692 | LR: 0.0005000
+2025-06-08 07:02:18,226 - root - INFO -   验证损失未改善 4轮。
+2025-06-08 07:02:54,911 - root - INFO - Epoch [11/50] | Train Loss: 0.349236 | Val Loss: 0.369089 | LR: 0.0005000
+2025-06-08 07:02:54,911 - root - INFO -   验证损失未改善 5轮。
+2025-06-08 07:03:31,536 - root - INFO - Epoch [12/50] | Train Loss: 0.335774 | Val Loss: 0.315445 | LR: 0.0005000
+2025-06-08 07:03:31,536 - root - INFO -   验证损失未改善 6轮。
+2025-06-08 07:04:09,189 - root - INFO - Epoch [13/50] | Train Loss: 0.329739 | Val Loss: 0.343598 | LR: 0.0005000
+2025-06-08 07:04:09,189 - root - INFO -   学习率从 0.0005000 降低到 0.0000500
+2025-06-08 07:04:09,189 - root - INFO -   验证损失未改善 7轮。
+2025-06-08 07:04:47,200 - root - INFO - Epoch [14/50] | Train Loss: 0.306646 | Val Loss: 0.390242 | LR: 0.0000500
+2025-06-08 07:04:47,200 - root - INFO -   验证损失未改善 8轮。
+2025-06-08 07:05:22,715 - root - INFO - Epoch [15/50] | Train Loss: 0.289255 | Val Loss: 0.393267 | LR: 0.0000500
+2025-06-08 07:05:22,715 - root - INFO -   验证损失未改善 9轮。
+2025-06-08 07:05:58,970 - root - INFO - Epoch [16/50] | Train Loss: 0.284639 | Val Loss: 0.401651 | LR: 0.0000500
+2025-06-08 07:05:58,970 - root - INFO -   验证损失未改善 10轮。
+2025-06-08 07:06:33,617 - root - INFO - Epoch [17/50] | Train Loss: 0.281405 | Val Loss: 0.406654 | LR: 0.0000500
+2025-06-08 07:06:33,617 - root - INFO -   验证损失未改善 11轮。
+2025-06-08 07:07:10,087 - root - INFO - Epoch [18/50] | Train Loss: 0.281181 | Val Loss: 0.397100 | LR: 0.0000500
+2025-06-08 07:07:10,088 - root - INFO -   验证损失未改善 12轮。
+2025-06-08 07:07:44,363 - root - INFO - Epoch [19/50] | Train Loss: 0.274701 | Val Loss: 0.405436 | LR: 0.0000500
+2025-06-08 07:07:44,363 - root - INFO -   验证损失未改善 13轮。
+2025-06-08 07:08:22,767 - root - INFO - Epoch [20/50] | Train Loss: 0.276341 | Val Loss: 0.394723 | LR: 0.0000500
+2025-06-08 07:08:22,767 - root - INFO -   学习率从 0.0000500 降低到 0.0000050
+2025-06-08 07:08:22,767 - root - INFO -   验证损失未改善 14轮。
+2025-06-08 07:08:58,662 - root - INFO - Epoch [21/50] | Train Loss: 0.274159 | Val Loss: 0.411922 | LR: 0.0000050
+2025-06-08 07:08:58,663 - root - INFO -   验证损失未改善 15轮。
+2025-06-08 07:08:58,663 - root - INFO - 触发早停！在 15 轮内验证损失未改善。
+2025-06-08 07:08:58,663 - root - INFO - 已加载早停（或最终epoch）得到的最佳模型权重。
+2025-06-08 07:08:58,666 - root - INFO - TimeSeriesDataset内部的输入缩放器已保存到: models/pytorch_input_scaler_v19_segmentation.pkl
+2025-06-08 07:08:58,668 - root - INFO - 目标缩放器已保存到: models/pytorch_target_scaler_v19_segmentation.pkl
+2025-06-08 07:08:58,675 - root - INFO - RMSSE scales 已保存到: models/rmsse_scales_v19_segmentation.json
+2025-06-08 07:08:58,680 - root - INFO - WRMSSE weights 已保存到: models/wrmsse_weights_v19_segmentation.json
+2025-06-08 07:08:58,680 - root - INFO - 模型训练流程完成。
+2025-06-08 07:08:58,954 - root - INFO - Phase 3: 模型训练成功。
+2025-06-08 07:08:58,954 - root - INFO - ===== Phase 4: 模型评估 (回归) =====
+2025-06-08 07:08:58,955 - root - INFO - 接收到 41798 行用于评估。
+2025-06-08 07:08:58,955 - root - INFO - 开始回归模型评估 (包含标准RMSSE/WRMSSE)...
+2025-06-08 07:08:58,955 - root - INFO - DEBUG_EVAL: Config object received in evaluate_regression_model: <class 'dict'>
+2025-06-08 07:08:58,956 - root - INFO - DEBUG_EVAL: eval_conf from config.get('evaluation_regression', {}): {'metrics': ['mean_squared_error', 'mean_absolute_error', 'r2_score', 'wmape', 'smape', 'rmsse', 'wrmsse'], 'rmsse_base_sales_col': 'sales_W', 'wrmsse_weight_column': 'sales_W', 'wrmsse_weight_period_weeks': 4}
+2025-06-08 07:08:58,956 - root - INFO - DEBUG_EVAL: metrics_to_calculate list to be used: ['mean_squared_error', 'mean_absolute_error', 'r2_score', 'wmape', 'smape', 'rmsse', 'wrmsse']
+2025-06-08 07:08:58,956 - root - INFO - DEBUG_EVAL: Type of metrics_to_calculate: <class 'list'>
+2025-06-08 07:08:58,956 - root - INFO - DEBUG_EVAL: First element of metrics_to_calculate: 'mean_squared_error', type: <class 'str'>
+2025-06-08 07:08:58,957 - root - INFO - PCA未启用 (评估)，使用 93 个数值特征。
+2025-06-08 07:08:58,971 - root - INFO - 使用预训练的输入数值特征缩放器 (transform)...
+2025-06-08 07:08:59,012 - root - INFO - 使用预训练的目标列缩放器 (transform)...
+2025-06-08 07:09:05,505 - root - INFO - 成功创建 8840 个时间序列样本。
+2025-06-08 07:09:05,506 - root - INFO - 测试 DataLoader 创建完成，包含 8840 个样本。
+2025-06-08 07:09:06,269 - root - INFO - DEBUG_EVAL: original_scale_predictions shape: (8840, 6)
+2025-06-08 07:09:06,270 - root - INFO - DEBUG_EVAL: original_scale_true_targets shape: (8840, 6)
+2025-06-08 07:09:06,332 - root - INFO - 指标 (缩放尺度) for sales_W_lead1: {'mse': 0.06018886715173721, 'mae': 0.12435668706893921, 'r2': 0.8971951007843018, 'wmape': 31.502869725227356, 'smape': 48.02796686794193}
+2025-06-08 07:09:07,389 - root - INFO - 指标 (原始尺度) for sales_W_lead1: {'mse': 164.28611755371094, 'mae': 6.4969801902771, 'r2': 0.897195041179657, 'wmape': 29.020056128501892, 'smape': 38.808219476077944, 'rmsse': 0.82978253148076}
+2025-06-08 07:09:07,390 - root - INFO - 指标 (缩放尺度) for sales_W_lead2: {'mse': 0.11067251116037369, 'mae': 0.15730758011341095, 'r2': 0.7582287788391113, 'wmape': 40.674757957458496, 'smape': 54.6684380088936}
+2025-06-08 07:09:08,445 - root - INFO - 指标 (原始尺度) for sales_W_lead2: {'mse': 301.1491394042969, 'mae': 8.205793380737305, 'r2': 0.7582287788391113, 'wmape': 43.82239580154419, 'smape': 52.17248568715198, 'rmsse': 0.9711425428666015}
+2025-06-08 07:09:08,447 - root - INFO - 指标 (缩放尺度) for sales_W_growth_4w_1p_lead1: {'mse': 0.2693644165992737, 'mae': 0.33514317870140076, 'r2': 0.3626880645751953, 'wmape': 76.99426412582397, 'smape': 110.39864484728676}
+2025-06-08 07:09:09,495 - root - INFO - 指标 (原始尺度) for sales_W_growth_4w_1p_lead1: {'mse': 0.020445441827178, 'mae': 0.09233333170413971, 'r2': 0.3626880645751953, 'wmape': 77.9573917388916, 'smape': 115.6430848782297, 'rmsse': 0.022055333035535467}
+2025-06-08 07:09:09,497 - root - INFO - 指标 (缩放尺度) for sales_W_growth_4w_1p_lead2: {'mse': 0.3514750003814697, 'mae': 0.4560548961162567, 'r2': 0.2661799192428589, 'wmape': 85.06116271018982, 'smape': 124.91152007935973}
+2025-06-08 07:09:10,558 - root - INFO - 指标 (原始尺度) for sales_W_growth_4w_1p_lead2: {'mse': 0.020605450496077538, 'mae': 0.11042335629463196, 'r2': 0.2661799192428589, 'wmape': 87.85411715507507, 'smape': 129.18411816406174, 'rmsse': 0.0248270869288503}
+2025-06-08 07:09:10,559 - root - INFO - 指标 (缩放尺度) for smoothed_sales_W_growth_4w_1p_lead1: {'mse': 0.20166009664535522, 'mae': 0.3139679729938507, 'r2': 0.5692919492721558, 'wmape': 63.044655323028564, 'smape': 96.27510158615236}
+2025-06-08 07:09:11,610 - root - INFO - 指标 (原始尺度) for smoothed_sales_W_growth_4w_1p_lead1: {'mse': 0.0028052048292011023, 'mae': 0.03703033924102783, 'r2': 0.5692919492721558, 'wmape': 63.245123624801636, 'smape': 97.11745742889289, 'rmsse': 0.008592870279104723}
+2025-06-08 07:09:11,611 - root - INFO - 指标 (缩放尺度) for smoothed_sales_W_growth_4w_1p_lead2: {'mse': 0.38436779379844666, 'mae': 0.4776419699192047, 'r2': 0.3335421681404114, 'wmape': 82.30511546134949, 'smape': 121.72312523657911}
+2025-06-08 07:09:12,662 - root - INFO - 指标 (原始尺度) for smoothed_sales_W_growth_4w_1p_lead2: {'mse': 0.004288400057703257, 'mae': 0.050451796501874924, 'r2': 0.33354222774505615, 'wmape': 83.5433304309845, 'smape': 123.33531565804611, 'rmsse': 0.010957515162415167}
+2025-06-08 07:09:12,662 - root - INFO - 总体平均目标RMSSE (各目标RMSSE的均值): 0.3112
+2025-06-08 07:09:12,663 - root - INFO - DEBUG_EVAL: Sales related targets for WRMSSE: ['sales_W_lead1', 'sales_W_lead2']
+2025-06-08 07:09:13,426 - root - INFO - 总体 WRMSSE (基于 'sales_W' 相关目标): 1.1151
+2025-06-08 07:09:13,427 - root - INFO - 模型评估完成。
+2025-06-08 07:09:13,450 - root - INFO - Phase 4 整体评估结果字典: {'sales_W_lead1_scaled_metrics': {'mse': 0.06018886715173721, 'mae': 0.12435668706893921, 'r2': 0.8971951007843018, 'wmape': 31.502869725227356, 'smape': 48.02796686794193}, 'sales_W_lead1_original_metrics': {'mse': 164.28611755371094, 'mae': 6.4969801902771, 'r2': 0.897195041179657, 'wmape': 29.020056128501892, 'smape': 38.808219476077944, 'rmsse': 0.82978253148076}, 'sales_W_lead2_scaled_metrics': {'mse': 0.11067251116037369, 'mae': 0.15730758011341095, 'r2': 0.7582287788391113, 'wmape': 40.674757957458496, 'smape': 54.6684380088936}, 'sales_W_lead2_original_metrics': {'mse': 301.1491394042969, 'mae': 8.205793380737305, 'r2': 0.7582287788391113, 'wmape': 43.82239580154419, 'smape': 52.17248568715198, 'rmsse': 0.9711425428666015}, 'sales_W_growth_4w_1p_lead1_scaled_metrics': {'mse': 0.2693644165992737, 'mae': 0.33514317870140076, 'r2': 0.3626880645751953, 'wmape': 76.99426412582397, 'smape': 110.39864484728676}, 'sales_W_growth_4w_1p_lead1_original_metrics': {'mse': 0.020445441827178, 'mae': 0.09233333170413971, 'r2': 0.3626880645751953, 'wmape': 77.9573917388916, 'smape': 115.6430848782297, 'rmsse': 0.022055333035535467}, 'sales_W_growth_4w_1p_lead2_scaled_metrics': {'mse': 0.3514750003814697, 'mae': 0.4560548961162567, 'r2': 0.2661799192428589, 'wmape': 85.06116271018982, 'smape': 124.91152007935973}, 'sales_W_growth_4w_1p_lead2_original_metrics': {'mse': 0.020605450496077538, 'mae': 0.11042335629463196, 'r2': 0.2661799192428589, 'wmape': 87.85411715507507, 'smape': 129.18411816406174, 'rmsse': 0.0248270869288503}, 'smoothed_sales_W_growth_4w_1p_lead1_scaled_metrics': {'mse': 0.20166009664535522, 'mae': 0.3139679729938507, 'r2': 0.5692919492721558, 'wmape': 63.044655323028564, 'smape': 96.27510158615236}, 'smoothed_sales_W_growth_4w_1p_lead1_original_metrics': {'mse': 0.0028052048292011023, 'mae': 0.03703033924102783, 'r2': 0.5692919492721558, 'wmape': 63.245123624801636, 'smape': 97.11745742889289, 'rmsse': 0.008592870279104723}, 'smoothed_sales_W_growth_4w_1p_lead2_scaled_metrics': {'mse': 0.38436779379844666, 'mae': 0.4776419699192047, 'r2': 0.3335421681404114, 'wmape': 82.30511546134949, 'smape': 121.72312523657911}, 'smoothed_sales_W_growth_4w_1p_lead2_original_metrics': {'mse': 0.004288400057703257, 'mae': 0.050451796501874924, 'r2': 0.33354222774505615, 'wmape': 83.5433304309845, 'smape': 123.33531565804611, 'rmsse': 0.010957515162415167}, 'overall_mean_rmsse_per_target': 0.31122631329221123, 'overall_wrmsse': 1.1151047707440234}
+2025-06-08 07:09:13,452 - root - INFO - 评估结果已保存到: results/pytorch_regression_evaluation_v19_segmentation.json
+2025-06-08 07:09:13,452 - root - INFO - ===== Phase 5: 预测与趋势解释 =====
+2025-06-08 07:09:13,452 - root - INFO - 接收到 41798 行数据用于预测和解释。
+2025-06-08 07:09:13,467 - root - INFO - 使用预训练的输入数值特征缩放器 (transform)...
+2025-06-08 07:09:13,508 - root - WARNING - 目标列缩放器未提供且fit_scalers=False。目标将保持原始尺度。
+2025-06-08 07:09:19,779 - root - INFO - 成功创建 8840 个时间序列样本。
+2025-06-08 07:09:20,202 - root - INFO - Phase 5: 成功生成原始尺度的预测值，形状: (8840, 6)
+2025-06-08 07:09:20,208 - root - INFO - 使用原始测试集的末尾ID和日期合并。
+2025-06-08 07:09:20,208 - root - INFO - 开始解释产品趋势...
+2025-06-08 07:09:20,209 - root - INFO - 为 lead1 应用 3 条趋势解释规则...
+2025-06-08 07:09:20,216 - root - INFO - 已为 interpreted_trend_lead1 生成趋势标签。
+2025-06-08 07:09:20,217 - root - INFO - 为 lead2 应用 2 条趋势解释规则...
+2025-06-08 07:09:20,221 - root - INFO - 已为 interpreted_trend_lead2 生成趋势标签。
+2025-06-08 07:09:20,221 - root - INFO - 产品趋势解释完成。
+2025-06-08 07:09:20,261 - root - INFO - 解释性预测结果已保存到: results/pytorch_regression_predictions_v19_segmentation.parquet
+2025-06-08 07:09:20,275 - root - INFO - ===== Phase 6: 生成HTML报告 =====
+2025-06-08 07:09:20,276 - root - ERROR - Phase 6: HTML模板文件未找到: dashboard.html
+2025-06-08 07:09:20,277 - root - INFO - 流程运行完毕。
+2025-06-08 07:16:33,606 - root - INFO - 日志同时输出到文件: /home/featurize/work/product_lifecycle_predictor_vA/results/experiment_regression_vXX_your_version.log 和控制台。
+2025-06-08 07:16:33,606 - root - INFO - 项目 'Product Trend Prediction (Continuous Metrics)' 版本 '1.19.0-product_segmentation' 开始运行。
+2025-06-08 07:16:33,606 - root - INFO - ===== Phase 1: 数据加载和预处理 =====
+2025-06-08 07:16:33,606 - root - INFO - 开始加载和预处理M5数据（包含层级和细化事件特征）...
+2025-06-08 07:16:33,606 - root - INFO - 从缓存加载已处理的周度数据: data/processed/m5_weekly_processed_mha_detailed_event.parquet
+2025-06-08 07:16:33,872 - root - INFO - 从缓存加载数据成功。
+2025-06-08 07:16:33,873 - root - INFO - Phase 1: 数据加载和预处理成功，返回 587569 行数据。
+2025-06-08 07:16:33,873 - root - INFO - ===== Phase 2: 特征工程 =====
+2025-06-08 07:16:33,873 - root - INFO - 开始生成特征和目标变量 (包含产品分段特征)...
+2025-06-08 07:16:34,119 - root - INFO - 已准备/计算源指标 (用于衍生特征): sales_W
+2025-06-08 07:16:34,120 - root - INFO - 已准备/计算源指标 (用于衍生特征): price_W_mean
+2025-06-08 07:16:34,791 - root - INFO - 已准备/计算源指标 (用于衍生特征): smoothed_sales_W
+2025-06-08 07:16:35,617 - root - INFO - 已准备/计算源指标 (用于衍生特征): sales_W_volatility_4w
+2025-06-08 07:16:39,260 - root - INFO - 已准备/计算源指标 (用于衍生特征): sales_W_growth_4w_1p
+2025-06-08 07:16:42,808 - root - INFO - 已准备/计算源指标 (用于衍生特征): smoothed_sales_W_growth_4w_1p
+2025-06-08 07:16:42,819 - root - INFO - 已计算相对层级特征: item_div_dept_sales_W
+2025-06-08 07:16:42,830 - root - INFO - 已计算相对层级特征: item_div_store_sales_W
+2025-06-08 07:16:42,830 - root - INFO - 将为以下成功计算/获取并配置的源指标生成滞后和滚动特征: ['sales_W', 'price_W_mean', 'smoothed_sales_W', 'sales_W_volatility_4w', 'sales_W_growth_4w_1p', 'smoothed_sales_W_growth_4w_1p', 'item_div_dept_sales_W', 'item_div_store_sales_W']
+2025-06-08 07:17:00,866 - root - INFO - 开始创建产品分段特征...
+2025-06-08 07:17:02,272 - root - INFO - 销量分段完成。各段分布:
+sales_segment
+HighSales    199381
+LowSales     194466
+MidSales     193722
+Name: count, dtype: int64
+2025-06-08 07:17:02,294 - root - INFO - 波动性分段完成。各段分布:
+volatility_segment
+Stable      293786
+Volatile    293783
+Name: count, dtype: int64
+2025-06-08 07:17:02,618 - root - INFO - 产品分段特征 'product_segment' 创建完成。
+2025-06-08 07:17:03,028 - root - INFO - 时间相关特征创建完成。
+2025-06-08 07:17:03,028 - root - INFO - 开始创建事件交互特征...
+2025-06-08 07:17:03,031 - root - INFO - 已创建事件交互特征: event_any_X_sales_roll_mean_4w
+2025-06-08 07:17:03,033 - root - INFO - 已创建事件交互特征: event_any_X_sales_volatility_4w
+2025-06-08 07:17:03,036 - root - INFO - 已创建事件交互特征: snap_ca_X_sales_roll_mean_4w
+2025-06-08 07:17:03,038 - root - INFO - 已创建事件交互特征: snap_ca_X_sales_volatility_4w
+2025-06-08 07:17:03,240 - root - INFO - 目标变量列: ['sales_W_lead1', 'sales_W_lead2', 'sales_W_growth_4w_1p_lead1', 'sales_W_growth_4w_1p_lead2', 'smoothed_sales_W_growth_4w_1p_lead1', 'smoothed_sales_W_growth_4w_1p_lead2']
+2025-06-08 07:17:03,563 - root - INFO - 因目标列中的NaN（来自未来期数shift）移除了 6584 行。
+2025-06-08 07:17:04,495 - root - INFO - 特征工程完成。最终DataFrame形状: (580985, 104)
+2025-06-08 07:17:04,495 - root - INFO - 实际最终输入特征列 (96): ['sales_W', 'smoothed_sales_W', 'price_W_mean', 'sales_W_growth_4w_1p', 'smoothed_sales_W_growth_4w_1p', 'sales_W_volatility_4w', 'item_div_dept_sales_W', 'item_div_store_sales_W', 'sales_W_lag_1', 'sales_W_lag_2']...
+2025-06-08 07:17:04,495 - root - INFO - 实际最终目标列 (6): ['sales_W_lead1', 'sales_W_lead2', 'sales_W_growth_4w_1p_lead1', 'sales_W_growth_4w_1p_lead2', 'smoothed_sales_W_growth_4w_1p_lead1', 'smoothed_sales_W_growth_4w_1p_lead2']
+2025-06-08 07:17:06,721 - root - INFO - Phase 2: 特征数据已保存到: data/features/m5_weekly_features_regression_v19_segmentation.parquet
+2025-06-08 07:17:07,280 - root - INFO - 数据已划分为训练池 (539187行) 和最终测试集 (41798行) 基于日期 2016-01-03.
+2025-06-08 07:17:07,281 - root - INFO - ===== Phase 3: 模型训练 (回归) =====
+2025-06-08 07:17:07,281 - root - INFO - 开始回归模型训练流程...
+2025-06-08 07:17:07,383 - root - INFO - 使用设备: cuda
+2025-06-08 07:17:07,416 - root - INFO - 准备好的类别特征嵌入信息: {'item_id': {'vocab_size': 823, 'embedding_dim': 50}, 'store_id': {'vocab_size': 4, 'embedding_dim': 10}, 'product_segment': {'vocab_size': 6, 'embedding_dim': 5}}
+2025-06-08 07:17:07,765 - root - INFO - 训练集 (用于统计和训练) 大小: 466956, 验证集大小: 72231
+2025-06-08 07:17:09,951 - root - INFO - 为 3272 个序列计算了RMSSE缩放分母。
+2025-06-08 07:17:09,952 - root - INFO - 为 3272 个序列计算了WRMSSE权重。
+2025-06-08 07:17:10,094 - root - INFO - 拟合输入数值特征缩放器 (fit_transform)...
+2025-06-08 07:17:11,029 - root - INFO - 拟合目标列缩放器 (fit_transform)...
+2025-06-08 07:17:21,769 - root - INFO - 成功创建 431219 个时间序列样本。
+2025-06-08 07:17:21,782 - root - INFO - 使用预训练的输入数值特征缩放器 (transform)...
+2025-06-08 07:17:21,845 - root - INFO - 使用预训练的目标列缩放器 (transform)...
+2025-06-08 07:17:28,171 - root - INFO - 成功创建 38102 个时间序列样本。
+2025-06-08 07:17:28,172 - root - INFO - 训练集 DataLoader 创建完成。训练样本数: 431219
+2025-06-08 07:17:28,172 - root - INFO - 验证集 DataLoader 创建完成。验证样本数: 38102
+2025-06-08 07:17:28,173 - root - INFO - 构建 LSTMRegressor 模型: 数值特征数=93, 类别嵌入信息=True, 输出目标数=6, 使用注意力=True, 注意力类型='multihead', 注意力头数=4
+2025-06-08 07:17:28,174 - root - INFO - 为 'item_id' 创建嵌入层: vocab_size=823, embedding_dim=50
+2025-06-08 07:17:28,174 - root - INFO - 为 'store_id' 创建嵌入层: vocab_size=4, embedding_dim=10
+2025-06-08 07:17:28,175 - root - INFO - 为 'product_segment' 创建嵌入层: vocab_size=6, embedding_dim=5
+2025-06-08 07:17:28,175 - root - INFO - LSTM 输入维度: 158 (数值: 93, 嵌入: 65)
+2025-06-08 07:17:28,176 - root - INFO - 创建 LSTM 层: hidden_size=64, num_layers=2, bidirectional=False
+2025-06-08 07:17:28,177 - root - INFO - PyTorch MultiheadAttention 已启用: embed_dim=64, num_heads=4, dropout=0.1
+2025-06-08 07:17:28,177 - root - INFO - 回归头添加全连接层: output_units=64
+2025-06-08 07:17:28,178 - root - INFO - 回归头添加全连接层: output_units=32
+2025-06-08 07:17:28,178 - root - INFO - 回归头最终输出层: output_units=6
+2025-06-08 07:17:28,178 - root - INFO - LSTMRegressor 模型构建（可能带注意力机制）完成。
+2025-06-08 07:17:28,751 - root - INFO - 使用损失函数: MSELoss, 优化器: Adam (lr=0.0005)
+2025-06-08 07:17:28,751 - root - INFO - 开始训练模型，共 50 个 epochs...
+2025-06-08 07:18:03,948 - root - INFO - Epoch [1/50] | Train Loss: 0.561589 | Val Loss: 0.375764 | LR: 0.0005000
+2025-06-08 07:18:03,949 - root - INFO -   验证损失改善，保存最佳模型状态。Best Val Loss: 0.375764
+2025-06-08 07:18:40,097 - root - INFO - Epoch [2/50] | Train Loss: 0.450769 | Val Loss: 0.330701 | LR: 0.0005000
+2025-06-08 07:18:40,098 - root - INFO -   验证损失改善，保存最佳模型状态。Best Val Loss: 0.330701
+2025-06-08 07:19:17,662 - root - INFO - Epoch [3/50] | Train Loss: 0.423918 | Val Loss: 0.294946 | LR: 0.0005000
+2025-06-08 07:19:17,665 - root - INFO -   验证损失改善，保存最佳模型状态。Best Val Loss: 0.294946
+2025-06-08 07:19:55,273 - root - INFO - Epoch [4/50] | Train Loss: 0.401341 | Val Loss: 0.325523 | LR: 0.0005000
+2025-06-08 07:19:55,273 - root - INFO -   验证损失未改善 1轮。
+2025-06-08 07:20:31,506 - root - INFO - Epoch [5/50] | Train Loss: 0.386837 | Val Loss: 0.295311 | LR: 0.0005000
+2025-06-08 07:20:31,506 - root - INFO -   验证损失未改善 2轮。
+2025-06-08 07:21:07,207 - root - INFO - Epoch [6/50] | Train Loss: 0.379222 | Val Loss: 0.314360 | LR: 0.0005000
+2025-06-08 07:21:07,207 - root - INFO -   验证损失未改善 3轮。
+2025-06-08 07:21:45,461 - root - INFO - Epoch [7/50] | Train Loss: 0.371347 | Val Loss: 0.344166 | LR: 0.0005000
+2025-06-08 07:21:45,461 - root - INFO -   验证损失未改善 4轮。
+2025-06-08 07:22:21,320 - root - INFO - Epoch [8/50] | Train Loss: 0.365311 | Val Loss: 0.313003 | LR: 0.0005000
+2025-06-08 07:22:21,321 - root - INFO -   验证损失未改善 5轮。
+2025-06-08 07:22:56,717 - root - INFO - Epoch [9/50] | Train Loss: 0.357710 | Val Loss: 0.344754 | LR: 0.0005000
+2025-06-08 07:22:56,717 - root - INFO -   验证损失未改善 6轮。
+2025-06-08 07:23:31,548 - root - INFO - Epoch [10/50] | Train Loss: 0.347674 | Val Loss: 0.318133 | LR: 0.0005000
+2025-06-08 07:23:31,548 - root - INFO -   学习率从 0.0005000 降低到 0.0000500
+2025-06-08 07:23:31,548 - root - INFO -   验证损失未改善 7轮。
+2025-06-08 07:24:06,685 - root - INFO - Epoch [11/50] | Train Loss: 0.323980 | Val Loss: 0.307841 | LR: 0.0000500
+2025-06-08 07:24:06,685 - root - INFO -   验证损失未改善 8轮。
+2025-06-08 07:24:42,930 - root - INFO - Epoch [12/50] | Train Loss: 0.309830 | Val Loss: 0.307330 | LR: 0.0000500
+2025-06-08 07:24:42,930 - root - INFO -   验证损失未改善 9轮。
+2025-06-08 07:25:19,626 - root - INFO - Epoch [13/50] | Train Loss: 0.303826 | Val Loss: 0.326017 | LR: 0.0000500
+2025-06-08 07:25:19,626 - root - INFO -   验证损失未改善 10轮。
+2025-06-08 07:25:56,727 - root - INFO - Epoch [14/50] | Train Loss: 0.297683 | Val Loss: 0.321875 | LR: 0.0000500
+2025-06-08 07:25:56,727 - root - INFO -   验证损失未改善 11轮。
+2025-06-08 07:26:35,590 - root - INFO - Epoch [15/50] | Train Loss: 0.294653 | Val Loss: 0.316669 | LR: 0.0000500
+2025-06-08 07:26:35,590 - root - INFO -   验证损失未改善 12轮。
+2025-06-08 07:27:17,988 - root - INFO - Epoch [16/50] | Train Loss: 0.293332 | Val Loss: 0.319556 | LR: 0.0000500
+2025-06-08 07:27:17,988 - root - INFO -   验证损失未改善 13轮。
+2025-06-08 07:27:55,993 - root - INFO - Epoch [17/50] | Train Loss: 0.289329 | Val Loss: 0.324977 | LR: 0.0000500
+2025-06-08 07:27:55,993 - root - INFO -   学习率从 0.0000500 降低到 0.0000050
+2025-06-08 07:27:55,993 - root - INFO -   验证损失未改善 14轮。
+2025-06-08 07:28:37,635 - root - INFO - Epoch [18/50] | Train Loss: 0.282774 | Val Loss: 0.330864 | LR: 0.0000050
+2025-06-08 07:28:37,635 - root - INFO -   验证损失未改善 15轮。
+2025-06-08 07:28:37,636 - root - INFO - 触发早停！在 15 轮内验证损失未改善。
+2025-06-08 07:28:37,637 - root - INFO - 已加载早停（或最终epoch）得到的最佳模型权重。
+2025-06-08 07:28:37,639 - root - INFO - TimeSeriesDataset内部的输入缩放器已保存到: models/pytorch_input_scaler_v19_segmentation.pkl
+2025-06-08 07:28:37,641 - root - INFO - 目标缩放器已保存到: models/pytorch_target_scaler_v19_segmentation.pkl
+2025-06-08 07:28:37,649 - root - INFO - RMSSE scales 已保存到: models/rmsse_scales_v19_segmentation.json
+2025-06-08 07:28:37,655 - root - INFO - WRMSSE weights 已保存到: models/wrmsse_weights_v19_segmentation.json
+2025-06-08 07:28:37,655 - root - INFO - 模型训练流程完成。
+2025-06-08 07:28:37,928 - root - INFO - Phase 3: 模型训练成功。
+2025-06-08 07:28:37,929 - root - INFO - ===== Phase 4: 模型评估 (回归) =====
+2025-06-08 07:28:37,930 - root - INFO - 接收到 41798 行用于评估。
+2025-06-08 07:28:37,930 - root - INFO - 开始回归模型评估 (包含标准RMSSE/WRMSSE)...
+2025-06-08 07:28:37,930 - root - INFO - DEBUG_EVAL: Config object received in evaluate_regression_model: <class 'dict'>
+2025-06-08 07:28:37,931 - root - INFO - DEBUG_EVAL: eval_conf from config.get('evaluation_regression', {}): {'metrics': ['mean_squared_error', 'mean_absolute_error', 'r2_score', 'wmape', 'smape', 'rmsse', 'wrmsse'], 'rmsse_base_sales_col': 'sales_W', 'wrmsse_weight_column': 'sales_W', 'wrmsse_weight_period_weeks': 4}
+2025-06-08 07:28:37,931 - root - INFO - DEBUG_EVAL: metrics_to_calculate list to be used: ['mean_squared_error', 'mean_absolute_error', 'r2_score', 'wmape', 'smape', 'rmsse', 'wrmsse']
+2025-06-08 07:28:37,932 - root - INFO - DEBUG_EVAL: Type of metrics_to_calculate: <class 'list'>
+2025-06-08 07:28:37,932 - root - INFO - DEBUG_EVAL: First element of metrics_to_calculate: 'mean_squared_error', type: <class 'str'>
+2025-06-08 07:28:37,934 - root - INFO - PCA未启用 (评估)，使用 93 个数值特征。
+2025-06-08 07:28:37,948 - root - INFO - 使用预训练的输入数值特征缩放器 (transform)...
+2025-06-08 07:28:37,988 - root - INFO - 使用预训练的目标列缩放器 (transform)...
+2025-06-08 07:28:44,480 - root - INFO - 成功创建 8840 个时间序列样本。
+2025-06-08 07:28:44,481 - root - INFO - 测试 DataLoader 创建完成，包含 8840 个样本。
+2025-06-08 07:28:45,281 - root - INFO - DEBUG_EVAL: original_scale_predictions shape: (8840, 6)
+2025-06-08 07:28:45,281 - root - INFO - DEBUG_EVAL: original_scale_true_targets shape: (8840, 6)
+2025-06-08 07:28:45,345 - root - INFO - 指标 (缩放尺度) for sales_W_lead1: {'mse': 0.05849554017186165, 'mae': 0.12502656877040863, 'r2': 0.9000873565673828, 'wmape': 31.67257010936737, 'smape': 47.44117935727755}
+2025-06-08 07:28:46,377 - root - INFO - 指标 (原始尺度) for sales_W_lead1: {'mse': 159.66415405273438, 'mae': 6.53197717666626, 'r2': 0.9000873565673828, 'wmape': 29.17637825012207, 'smape': 43.207042876562255, 'rmsse': 0.8377311831337175}
+2025-06-08 07:28:46,379 - root - INFO - 指标 (缩放尺度) for sales_W_lead2: {'mse': 0.12295603007078171, 'mae': 0.15870271623134613, 'r2': 0.7313946485519409, 'wmape': 41.035497188568115, 'smape': 52.513094963743534}
+2025-06-08 07:28:47,409 - root - INFO - 指标 (原始尺度) for sales_W_lead2: {'mse': 334.5735778808594, 'mae': 8.278569221496582, 'r2': 0.7313946485519409, 'wmape': 44.21105086803436, 'smape': 54.003643568745716, 'rmsse': 0.9331859611624209}
+2025-06-08 07:28:47,410 - root - INFO - 指标 (缩放尺度) for sales_W_growth_4w_1p_lead1: {'mse': 0.29179200530052185, 'mae': 0.35358336567878723, 'r2': 0.30962473154067993, 'wmape': 81.230628490448, 'smape': 117.74571055452374}
+2025-06-08 07:28:48,439 - root - INFO - 指标 (原始尺度) for sales_W_growth_4w_1p_lead1: {'mse': 0.022147750481963158, 'mae': 0.09741368144750595, 'r2': 0.3096247911453247, 'wmape': 82.24675059318542, 'smape': 120.46812998221405, 'rmsse': 0.023171946150481505}
+2025-06-08 07:28:48,440 - root - INFO - 指标 (缩放尺度) for sales_W_growth_4w_1p_lead2: {'mse': 0.3962083160877228, 'mae': 0.48010966181755066, 'r2': 0.17278438806533813, 'wmape': 89.54774141311646, 'smape': 130.39188448202557}
+2025-06-08 07:28:49,471 - root - INFO - 指标 (原始尺度) for sales_W_growth_4w_1p_lead2: {'mse': 0.02322796732187271, 'mae': 0.11624766886234283, 'r2': 0.1727844476699829, 'wmape': 92.48800873756409, 'smape': 134.12630515812353, 'rmsse': 0.02626109941975332}
+2025-06-08 07:28:49,472 - root - INFO - 指标 (缩放尺度) for smoothed_sales_W_growth_4w_1p_lead1: {'mse': 0.21968425810337067, 'mae': 0.3254939615726471, 'r2': 0.5307958126068115, 'wmape': 65.35906791687012, 'smape': 95.83080681090722}
+2025-06-08 07:28:50,503 - root - INFO - 指标 (原始尺度) for smoothed_sales_W_growth_4w_1p_lead1: {'mse': 0.0030559306032955647, 'mae': 0.038389742374420166, 'r2': 0.5307958126068115, 'wmape': 65.566885471344, 'smape': 96.33356795490955, 'rmsse': 0.00892253950523097}
+2025-06-08 07:28:50,505 - root - INFO - 指标 (缩放尺度) for smoothed_sales_W_growth_4w_1p_lead2: {'mse': 0.39063382148742676, 'mae': 0.47631096839904785, 'r2': 0.32267749309539795, 'wmape': 82.07576274871826, 'smape': 119.93312048343927}
+2025-06-08 07:28:51,540 - root - INFO - 指标 (原始尺度) for smoothed_sales_W_growth_4w_1p_lead2: {'mse': 0.004358310718089342, 'mae': 0.05031121149659157, 'r2': 0.32267749309539795, 'wmape': 83.31053853034973, 'smape': 121.04325976463997, 'rmsse': 0.010942519168518544}
+2025-06-08 07:28:51,541 - root - INFO - 总体平均目标RMSSE (各目标RMSSE的均值): 0.3067
+2025-06-08 07:28:51,541 - root - INFO - DEBUG_EVAL: Sales related targets for WRMSSE: ['sales_W_lead1', 'sales_W_lead2']
+2025-06-08 07:28:52,281 - root - INFO - 总体 WRMSSE (基于 'sales_W' 相关目标): 1.1326
+2025-06-08 07:28:52,282 - root - INFO - 模型评估完成。
+2025-06-08 07:28:52,315 - root - INFO - Phase 4 整体评估结果字典: {'sales_W_lead1_scaled_metrics': {'mse': 0.05849554017186165, 'mae': 0.12502656877040863, 'r2': 0.9000873565673828, 'wmape': 31.67257010936737, 'smape': 47.44117935727755}, 'sales_W_lead1_original_metrics': {'mse': 159.66415405273438, 'mae': 6.53197717666626, 'r2': 0.9000873565673828, 'wmape': 29.17637825012207, 'smape': 43.207042876562255, 'rmsse': 0.8377311831337175}, 'sales_W_lead2_scaled_metrics': {'mse': 0.12295603007078171, 'mae': 0.15870271623134613, 'r2': 0.7313946485519409, 'wmape': 41.035497188568115, 'smape': 52.513094963743534}, 'sales_W_lead2_original_metrics': {'mse': 334.5735778808594, 'mae': 8.278569221496582, 'r2': 0.7313946485519409, 'wmape': 44.21105086803436, 'smape': 54.003643568745716, 'rmsse': 0.9331859611624209}, 'sales_W_growth_4w_1p_lead1_scaled_metrics': {'mse': 0.29179200530052185, 'mae': 0.35358336567878723, 'r2': 0.30962473154067993, 'wmape': 81.230628490448, 'smape': 117.74571055452374}, 'sales_W_growth_4w_1p_lead1_original_metrics': {'mse': 0.022147750481963158, 'mae': 0.09741368144750595, 'r2': 0.3096247911453247, 'wmape': 82.24675059318542, 'smape': 120.46812998221405, 'rmsse': 0.023171946150481505}, 'sales_W_growth_4w_1p_lead2_scaled_metrics': {'mse': 0.3962083160877228, 'mae': 0.48010966181755066, 'r2': 0.17278438806533813, 'wmape': 89.54774141311646, 'smape': 130.39188448202557}, 'sales_W_growth_4w_1p_lead2_original_metrics': {'mse': 0.02322796732187271, 'mae': 0.11624766886234283, 'r2': 0.1727844476699829, 'wmape': 92.48800873756409, 'smape': 134.12630515812353, 'rmsse': 0.02626109941975332}, 'smoothed_sales_W_growth_4w_1p_lead1_scaled_metrics': {'mse': 0.21968425810337067, 'mae': 0.3254939615726471, 'r2': 0.5307958126068115, 'wmape': 65.35906791687012, 'smape': 95.83080681090722}, 'smoothed_sales_W_growth_4w_1p_lead1_original_metrics': {'mse': 0.0030559306032955647, 'mae': 0.038389742374420166, 'r2': 0.5307958126068115, 'wmape': 65.566885471344, 'smape': 96.33356795490955, 'rmsse': 0.00892253950523097}, 'smoothed_sales_W_growth_4w_1p_lead2_scaled_metrics': {'mse': 0.39063382148742676, 'mae': 0.47631096839904785, 'r2': 0.32267749309539795, 'wmape': 82.07576274871826, 'smape': 119.93312048343927}, 'smoothed_sales_W_growth_4w_1p_lead2_original_metrics': {'mse': 0.004358310718089342, 'mae': 0.05031121149659157, 'r2': 0.32267749309539795, 'wmape': 83.31053853034973, 'smape': 121.04325976463997, 'rmsse': 0.010942519168518544}, 'overall_mean_rmsse_per_target': 0.30670254142335385, 'overall_wrmsse': 1.1325628186820769}
+2025-06-08 07:28:52,317 - root - INFO - 评估结果已保存到: results/pytorch_regression_evaluation_v19_segmentation.json
+2025-06-08 07:28:52,317 - root - INFO - ===== Phase 5: 预测与趋势解释 =====
+2025-06-08 07:28:52,317 - root - INFO - 接收到 41798 行数据用于预测和解释。
+2025-06-08 07:28:52,330 - root - INFO - 使用预训练的输入数值特征缩放器 (transform)...
+2025-06-08 07:28:52,392 - root - WARNING - 目标列缩放器未提供且fit_scalers=False。目标将保持原始尺度。
+2025-06-08 07:28:59,254 - root - INFO - 成功创建 8840 个时间序列样本。
+2025-06-08 07:28:59,705 - root - INFO - Phase 5: 成功生成原始尺度的预测值，形状: (8840, 6)
+2025-06-08 07:28:59,712 - root - INFO - 使用原始测试集的末尾ID和日期合并。
+2025-06-08 07:28:59,712 - root - INFO - 开始解释产品趋势...
+2025-06-08 07:28:59,712 - root - INFO - 为 lead1 应用 3 条趋势解释规则...
+2025-06-08 07:28:59,720 - root - INFO - 已为 interpreted_trend_lead1 生成趋势标签。
+2025-06-08 07:28:59,720 - root - INFO - 为 lead2 应用 2 条趋势解释规则...
+2025-06-08 07:28:59,724 - root - INFO - 已为 interpreted_trend_lead2 生成趋势标签。
+2025-06-08 07:28:59,725 - root - INFO - 产品趋势解释完成。
+2025-06-08 07:28:59,755 - root - INFO - 解释性预测结果已保存到: results/pytorch_regression_predictions_v19_segmentation.parquet
+2025-06-08 07:28:59,776 - root - INFO - ===== Phase 6: 生成HTML报告 =====
+2025-06-08 07:28:59,796 - root - INFO - Phase 6: HTML报告已成功生成并保存到: results/dashboard_report.html
+2025-06-08 07:28:59,796 - root - INFO - 流程运行完毕。

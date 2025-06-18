@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelliStock for Walmart - 产品趋势预测仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* (样式保持不变) */
+        :root {
+            --walmart-blue: #0071ce;
+            --walmart-yellow: #ffc120;
+            --kaggle-blue: #20beff;
+            --kaggle-bg: #f2f5f8;
+            --text-dark: #1f2937;
+            --text-light: #4b5563;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--kaggle-bg);
+        }
+        .kpi-card {
+            border-top: 4px solid;
+            transition: all 0.3s ease-in-out;
+        }
+        .kpi-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .kpi-growth { border-color: #4ade80; }
+        .kpi-decline { border-color: #f87171; }
+        .kpi-stable { border-color: var(--walmart-yellow); }
+        .kpi-confidence { border-color: var(--walmart-blue); }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .status-growth { background-color: #4ade80; } 
+        .status-stable { background-color: #fbbf24; }
+        .status-decline { background-color: #f87171; }
+        .status-unknown { background-color: #9ca3af; }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-link:hover {
+            background-color: #eef2ff;
+            color: var(--walmart-blue);
+            border-left-color: var(--walmart-blue);
+        }
+        .sidebar-link.active {
+            background-color: #e0e7ff;
+            color: var(--walmart-blue);
+            font-weight: 700;
+            border-left-color: var(--walmart-blue);
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar (保持不变) -->
+        <div class="hidden md:flex flex-col w-64 bg-white">
+            <div class="flex items-center justify-center h-20 shadow-md">
+                <svg class="h-10 w-10 text-walmart-blue" viewBox="0 0 100 100" fill="currentColor" style="color: var(--walmart-blue);" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 0 L60 40 L100 50 L60 60 L50 100 L40 60 L0 50 L40 40 Z" transform="scale(0.8) translate(12, 12)"/>
+                </svg>
+                <span class="text-xl font-bold text-gray-800 ml-2">IntelliStock</span>
+            </div>
+            <div class="flex-grow overflow-y-auto">
+                <nav class="mt-10">
+                    <a class="sidebar-link active flex items-center px-6 py-4" href="#">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                        <span class="mx-3">预测仪表盘</span>
+                    </a>
+                    <a class="sidebar-link flex items-center mt-2 px-6 py-4" href="#">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <span class="mx-3">库存分析</span>
+                    </a>
+                    <a class="sidebar-link flex items-center mt-2 px-6 py-4" href="#">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
+                        <span class="mx-3">营销报告</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex flex-col flex-1 overflow-y-auto">
+            <div class="p-4 md:p-8">
+                <h1 class="text-3xl font-bold text-gray-800">产品趋势预测仪表盘</h1>
+                <p class="mt-2 text-gray-600">for <span class="font-bold" style="color: var(--walmart-blue);">Walmart</span> | 利用深度学习洞察销售趋势，优化库存与营销决策。</p>
+                <p class="mt-1 text-sm text-gray-500">报告生成时间: 2025-06-08 07:51:59</p>
+
+                <!-- KPI Cards -->
+                <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                    <div class="kpi-card p-6 bg-white rounded-lg shadow-lg kpi-growth">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100"><svg class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500 truncate">预测增长商品数</p>
+                                <p class="text-3xl font-bold text-gray-900">658</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kpi-card p-6 bg-white rounded-lg shadow-lg kpi-decline">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-red-100"><svg class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg></div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500 truncate">预警衰退商品数</p>
+                                <p class="text-3xl font-bold text-gray-900">1358</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kpi-card p-6 bg-white rounded-lg shadow-lg kpi-stable">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100"><svg class="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a3.002 3.002 0 014.288 0M12 12a3 3 0 110-6 3 3 0 010 6z" /></svg></div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500 truncate">稳定低活商品</p>
+                                <p class="text-3xl font-bold text-gray-900">241</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kpi-card p-6 bg-white rounded-lg shadow-lg kpi-confidence">
+                        <div class="flex items-center">
+                             <div class="p-3 rounded-full bg-blue-100"><svg class="h-8 w-8" style="color: var(--walmart-blue);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                             <div class="ml-4">
+                                 <p class="text-sm font-medium text-gray-500 truncate">总预测商品数</p>
+                                 <p class="text-3xl font-bold text-gray-900">677</p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters and Main Chart (保持不变) -->
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-lg">
+                     <!-- ... (图表部分保持静态，因为动态生成图表比较复杂) ... -->
+                </div>
+
+                <!-- Predictions Table -->
+                <div class="mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="p-6">
+                        <h2 class="text-xl font-semibold text-gray-700">商品预测与行动建议</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead style="background-color: var(--walmart-blue);">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">产品ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">产品分段</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">未来1周预测销量</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">未来1周趋势</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">未来2周预测销量</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">建议操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_827_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">62 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-13.30%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">80.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-13.46%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">80.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+2.02%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">80.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.06%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">75.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">2 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">-0.14%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">95.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">19 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-16.81%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">81.0%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">6 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.90%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">86.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">8 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-11.36%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">76.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">2 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-6.18%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">96.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">32 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-8.87%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">82.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-10.90%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">76.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">2 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-1.01%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">95.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-2.07%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">82.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">6 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-14.11%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">85.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-13.39%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">85.1%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">8 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-8.26%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">95.1%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-6.39%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">92.0%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">33 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-9.91%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">97.5%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">16 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+5.21%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">77.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">6 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-6.20%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">93.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">4 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+2.63%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">84.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">17 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+5.73%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">76.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+1.67%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">90.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">29 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+10.52%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">89.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">31 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+9.78%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">91.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">29 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+10.29%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">81.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-9.78%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">80.5%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">11 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-12.96%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">93.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">14 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+22.05%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">94.5%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">13 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-11.10%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">83.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">32 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+9.50%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">95.5%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">32 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+5.51%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">97.5%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">28 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+5.84%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">75.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">20 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.66%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">97.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">33 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+12.37%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">89.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">29 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+7.62%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">76.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_688_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">7 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-6.92%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">85.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_688_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-1.53%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">91.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-1.36%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">82.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_798_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">6 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.15%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">96.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">15 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.48%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">80.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">48 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+5.82%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">83.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_688_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">11 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.12%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">90.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">10 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+7.27%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">83.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">10 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+10.15%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">84.5%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">14 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+13.44%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">93.1%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_797_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">12 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.68%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">85.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">13 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+10.36%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">87.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">11 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+7.43%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">89.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_797_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">11 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+9.51%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">88.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">10 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.12%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">85.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">15 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-9.91%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">93.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_770_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.78%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">86.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_729_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">27 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+10.71%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">81.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">12 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+8.25%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">92.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_727_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">28 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+12.28%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">75.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_770_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">13 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.49%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">83.1%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_797_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">18 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.15%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">80.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_727_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">11 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.79%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">76.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-8.98%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">90.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">7 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.28%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">94.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_690_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">12 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+5.95%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">78.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">10 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+13.75%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">95.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">14 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-20.40%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">94.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_797_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">13 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+5.88%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">90.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">8 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.21%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">82.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">+0.61%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">90.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_797_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.49%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">90.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_797_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">12 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+7.61%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">91.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">12 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+11.27%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">91.1%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">12 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.34%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">89.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_797_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">10 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+5.84%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">91.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">11 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-9.88%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">90.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">7 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.28%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">93.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">7 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.55%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">91.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-6.00%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">86.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">7 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.54%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">81.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.42%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">75.3%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">6 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-9.10%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">97.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_689_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">3 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+1.38%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-stable"></span>稳定低活跃</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">89.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-600">维持最小安全库存</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_769_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">7 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-10.97%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">82.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_797_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">11 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-6.76%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">79.1%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_688_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">17 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.22%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">87.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_688_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">14 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+29.68%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">85.9%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_725_CA_2_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">12 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-10.71%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">97.0%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_731_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.71%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">95.1%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_686_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">13 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+13.01%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">93.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_730_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.59%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">75.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_730_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">10 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+8.38%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">95.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_768_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">31 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.28%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">75.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_686_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">7 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.54%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">81.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_768_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">4 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.32%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">77.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_768_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">9 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-13.01%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">81.0%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_768_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">5 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-6.12%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">82.1%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_768_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">11 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-14.37%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">81.2%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_768_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">8 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-7.30%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">86.6%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_768_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">7 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.38%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">80.4%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_730_CA_3_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">23 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">+6.54%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-growth"></span>增长趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">87.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">适当增加库存，观察转化</td>
+        </tr>
+<tr class="">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_768_CA_4_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">12 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-9.49%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">77.7%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+<tr class="bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FOODS_3_800_CA_1_validation</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">N/A</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">27 件</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">-5.45%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center"><span class="status-dot status-decline"></span>下降趋势</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">84.8%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 font-semibold">减少补货，考虑捆绑销售</td>
+        </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
