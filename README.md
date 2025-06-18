@@ -46,7 +46,7 @@
 
 我们项目的核心产出是一个交互式的商业智能仪表盘，可以帮助您分析产品趋势并提供决策建议。下方是仪表盘的静态预览图。
 
-**[点击此处查看功能完整的在线交互式仪表盘](https://<eastr5>.github.io/product-lifecycle-prediction/results/仪表盘显示.html)**
+**[点击此处查看功能完整的在线交互式仪表盘](https://eastr5.github.io/product-lifecycle-prediction/results/dashboard_report.html)**
 
 ## 🔄 系统工作流
 
